@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:stm32="https://developer.st.com/schemas/stm32cube/1.0.0" schemaVersion="1.7.55" xsi:noNamespaceSchemaLocation="PACK.xsd" xsi:schemaLocation="https://developer.st.com/schemas/stm32cube/1.0.0 stm32cube.xsd" Dvendor="STMicroelectronics:13" Dname="STM32*">
+  <vendor>STMicroelectronics</vendor>
+  <name>eeprom_emulation</name>
+  <environments>
+    <environment name="STM32Cube">
+      <stm32:pack type="UTILITY" friendlyName="eeprom_emulation" shortDesc="EEPROM_Emulation utility">
+        <relocation-info parent="utilities" layer="" element=""/>
+      </stm32:pack>
+    </environment>
+  </environments>
+  <ECCN>
+    <ECCN-EU>NEC</ECCN-EU>
+    <ECCN-US>EAR99</ECCN-US>
+  </ECCN>
+  <description>Pack with EEPROM_Emulation utility</description>
+  <url>https://developer.st.com/st-pack-server/api/v1/pack/</url>
+  <supportContact>https://community.st.com/</supportContact>
+  <repository type="git">https://github.com/STMicroelectronics/stm32-util-eeprom-emulation</repository>
+  <license>LICENSE.md</license>
+  <changelogs>
+    <changelog id="Release Notes" name="Release_Notes.html"/>
+  </changelogs>
+  <releases>
+    <release version="2.0.0" date="2026-03-13">
+      Refer to Release_Notes.html for release details.
+    </release>
+  </releases>
+  <keywords>
+    <keyword>STMicroelectronics</keyword>
+    <keyword>ST</keyword>
+    <keyword>STM32</keyword>
+    <keyword>utility</keyword>
+    <keyword>eeprom</keyword>
+    <keyword>emulation</keyword>
+    <keyword>flash</keyword>
+  </keywords>
+  <conditions>
+    <condition id="STM32 HAL FLASH">
+      <description>STMicroelectronics FLASH HAL Driver as low level component</description>
+      <require Cclass="Device" Cgroup="STM32 HAL" Csub="FLASH"/>
+      <require Cclass="Device" Cgroup="STM32 HAL" Csub="FLASH_ITF"/>
+    </condition>
+    <condition id="STM32 HAL NVM">
+      <description>STMicroelectronics FLASH HAL Driver as low level component</description>
+      <require Cclass="Device" Cgroup="STM32 HAL" Csub="NVM"/>
+      <require Cclass="Device" Cgroup="STM32 HAL" Csub="NVM_ITF"/>
+    </condition>
+    <condition id="STM32 HAL CRC">
+      <description>STMicroelectronics CRC HAL Driver as low level component</description>
+      <require Cclass="Device" Cgroup="STM32 HAL" Csub="CRC"/>
+    </condition>
+    <condition id="CRC_interface">
+      <description>condition to include a CRC component</description>
+      <accept Cclass="Utility" Cgroup="eeprom emulation" Csub="itf_crc" Cvariant="CRC"/>
+      <accept Cclass="Utility" Cgroup="eeprom emulation" Csub="itf_crc" Cvariant="CRC template"/>
+    </condition>
+    <condition id="ECC_interface">
+      <description>condition to include a CRC component</description>
+      <accept Cclass="Utility" Cgroup="eeprom emulation" Csub="itf_ecc" Cvariant="ECC"/>
+      <accept Cclass="Utility" Cgroup="eeprom emulation" Csub="itf_ecc" Cvariant="ECC template"/>
+    </condition>
+    <condition id="FLITF_interface">
+      <description>condition to include a flitf interface component</description>
+      <accept Cclass="Utility" Cgroup="eeprom emulation" Csub="itf_flash" Cvariant="FLITF_EDATA"/>
+      <accept Cclass="Utility" Cgroup="eeprom emulation" Csub="itf_flash" Cvariant="FLASH template"/>
+    </condition>
+    <condition id="NVM_interface">
+      <description>condition to include a nvm interface component</description>
+      <accept Cclass="Utility" Cgroup="eeprom emulation" Csub="itf_flash" Cvariant="NVM_EDATA"/>
+      <accept Cclass="Utility" Cgroup="eeprom emulation" Csub="itf_flash" Cvariant="FLASH template"/>
+    </condition>
+    <condition id="FLASH FLITF">
+      <description>EEPROM_Emulation required package for FLITF</description>
+      <require condition="CRC_interface"/>
+      <require condition="FLITF_interface"/>
+      <require Cclass="Utility" Cgroup="eeprom emulation" Csub="algo" Cvariant="FLITF"/>
+    </condition>
+    <condition id="FLASH NVM">
+      <description>EEPROM_Emulation required package for NVM</description>
+      <require condition="CRC_interface"/>
+      <require condition="ECC_interface"/>
+      <require condition="NVM_interface"/>
+      <require Cclass="Utility" Cgroup="eeprom emulation" Csub="algo" Cvariant="NVM"/>
+    </condition>
+    <condition id="Core">
+      <accept condition="FLASH FLITF"/>
+      <accept condition="FLASH NVM"/>
+    </condition>
+  </conditions>
+  <components>
+    <component Cclass="Utility" Cgroup="eeprom emulation" Csub="algo" Cvariant="FLITF" Cversion="1.0.0">
+      <description>EEPROM_Emulation flitf algorithm</description>
+      <files>
+        <file category="source" name="core/algo/eeprom_algo_flitf.c"/>
+        <file category="header" name="core/algo/eeprom_algo_flitf.h"/>
+      </files>
+    </component>
+    <component Cclass="Utility" Cgroup="eeprom emulation" Csub="algo" Cvariant="NVM" Cversion="1.0.0">
+      <description>EEPROM_Emulation nvm algorithm</description>
+      <files>
+        <file category="source" name="core/algo/eeprom_algo_nvm.c"/>
+        <file category="header" name="core/algo/eeprom_algo_nvm.h"/>
+      </files>
+    </component>
+    <component Cclass="Utility" Cgroup="eeprom emulation" Csub="itf_flash" Cvariant="FLITF_EDATA" condition="STM32 HAL FLASH" Cversion="1.0.0">
+      <description>EEPROM_Emulation flash flitf edata interface</description>
+      <files>
+        <file category="source" name="interface_flash/eeprom_itfflash_flitf_edata.c"/>
+        <file category="header" name="interface_flash/eeprom_itf_flash.h"/>
+      </files>
+    </component>
+    <component Cclass="Utility" Cgroup="eeprom emulation" Csub="itf_flash" Cvariant="NVM_EDATA" condition="STM32 HAL NVM" Cversion="1.0.0">
+      <description>EEPROM_Emulation flash nvm edata interface</description>
+      <files>
+        <file category="source" name="interface_flash/eeprom_itfflash_nvm_edata.c"/>
+        <file category="header" name="interface_flash/eeprom_itf_flash.h"/>
+      </files>
+    </component>
+    <component Cclass="Utility" Cgroup="eeprom emulation" Csub="itf_flash" Cvariant="FLASH template" Cversion="1.0.0">
+      <description>EEPROM_Emulation flash template interface</description>
+      <files>
+        <file category="source" name="interface_flash/eeprom_itfflash_template.c"/>
+        <file category="header" name="interface_flash/eeprom_itf_flash.h"/>
+      </files>
+    </component>
+    <component Cclass="Utility" Cgroup="eeprom emulation" Csub="itf_ecc" Cvariant="ECC" Cversion="1.0.0" isDefaultVariant="true">
+      <description>EEPROM_Emulation ECC interface</description>
+      <files>
+        <file category="source" name="interface_ecc/eeprom_itfecc_bch.c"/>
+        <file category="header" name="interface_ecc/eeprom_itf_ecc.h"/>
+      </files>
+    </component>
+    <component Cclass="Utility" Cgroup="eeprom emulation" Csub="itf_ecc" Cvariant="ECC template" Cversion="1.0.0">
+      <description>EEPROM_Emulation ECC template interface</description>
+      <files>
+        <file category="source" name="interface_ecc/eeprom_itfecc_template.c"/>
+        <file category="header" name="interface_ecc/eeprom_itf_ecc.h"/>
+      </files>
+    </component>
+    <component Cclass="Utility" Cgroup="eeprom emulation" Csub="itf_crc" Cvariant="CRC" Cversion="1.0.0" condition="STM32 HAL CRC" isDefaultVariant="true">
+      <description>EEPROM_Emulation CRC interface</description>
+      <files>
+        <file category="source" name="interface_crc/eeprom_itfcrc_crc.c"/>
+        <file category="header" name="interface_crc/eeprom_itf_crc.h"/>
+      </files>
+    </component>
+    <component Cclass="Utility" Cgroup="eeprom emulation" Csub="itf_crc" Cvariant="CRC template" Cversion="1.0.0">
+      <description>EEPROM_Emulation CRC template interface</description>
+      <files>
+        <file category="source" name="interface_crc/eeprom_itfcrc_template.c"/>
+        <file category="header" name="interface_crc/eeprom_itf_crc.h"/>
+      </files>
+    </component>
+    <component Cvendor="STMicroelectronics" Cclass="Utility" Cgroup="eeprom emulation" Csub="core" Cversion="1.0.0" condition="Core">
+      <description>EEPROM_Emulation core module</description>
+      <files>
+        <file category="doc" name="README.md"/>
+        <file category="header" name="core/eeprom_emul_core.h"/>
+        <file category="source" name="core/eeprom_emul_core.c"/>
+        <file category="doc" name="SW_Security_Level.md"/>
+      </files>
+    </component>
+  </components>
+</package>

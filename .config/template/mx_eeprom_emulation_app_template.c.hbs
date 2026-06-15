@@ -1,0 +1,72 @@
+{{!--
+  ******************************************************************************
+  * @file           : mx_eeprom_emulation_app_template.c.hbs
+  * @brief          : EEPROM Emulation utility initialization source template
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2026 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  ~--}}
+{{assign 'eeprom_emulationFilter' (JSONparse '{"cgroup": "STM32CubeMX2 Config", "csub": "EEPROM_Emulation"}')~}}
+{{assign 'eeprom_emulation_context' (@root.SWConfigurationAPI.getInstancesConfiguration @root.eeprom_emulationFilter)~}}
+{{assign 'eeprom_emulation_cxt' @root.eeprom_emulation_context.[0].settings.parameters~}}
+{{log "eeprom_emulation Config template eeprom_emulation_cxt:" (toJSON @root.eeprom_emulation_cxt)~}}
+
+/**
+  ******************************************************************************
+  * @file : mx_eeprom_emulation_app.c
+  * @brief : EEPROM Emulation initialization source file
+{{> LICENSE}}
+
+
+/* Includes ------------------------------------------------------------------*/
+#include "mx_eeprom_emulation_app.h"
+
+/* Private typedef -----------------------------------------------------------*/
+/* Private defines -----------------------------------------------------------*/
+/* Private macros ------------------------------------------------------------*/
+/* Private variables ---------------------------------------------------------*/
+/* Private functions prototype------------------------------------------------*/
+static ee_object_t mx_ee_object;
+
+/* Exported functions --------------------------------------------------------*/
+
+/******************************************************************************/
+/* Exported functions for mx_eeprom_emulation in EEPROM Emulation utility     */
+/******************************************************************************/
+
+{{#with @root.eeprom_emulation_cxt~}}
+system_status_t mx_eeprom_emulation_init(void)
+{
+  system_status_t return_status = SYSTEM_OK;
+
+  /* Get EEPROM interface handles */
+{{#if (eq resourcesAllocation.flash.interface 'CUSTOM')}}
+  mx_ee_object.f_object = NULL;
+{{else}}
+  mx_ee_object.f_object = EEPROM_EMULATION_FLASH_HANDLE();
+{{/if}}
+
+  /* Get CRC interface handle */
+{{#if (eq resourcesAllocation.crc.interface 'CUSTOM')}}
+  mx_ee_object.crc_object = NULL;
+{{else}}
+  mx_ee_object.crc_object = EEPROM_EMULATION_CRC_HANDLE();
+{{/if}}
+
+  /* Initialize EEPROM Emulation */
+  if (EE_Init(&mx_ee_object, {{#if (eq basic.flash_type "NVM")}}EE_FORCED_ERASE{{else}}{{basic.erase_type_on_init}}{{/if}}) != EE_OK)
+  {
+    return_status = SYSTEM_POSTSYSTEM_ERROR;
+  }
+
+  return return_status;
+}
+{{/with}}{{!eeprom_emulation_cxt}}

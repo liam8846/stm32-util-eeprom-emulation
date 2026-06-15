@@ -1,15 +1,15 @@
 {
     "bomFormat": "CycloneDX",
     "specVersion": "1.5",
-    "serialNumber": "urn:uuid:8eebae71-9b3a-435d-ba68-f0e47933ed43",
+    "serialNumber": "urn:uuid:063fbab1-1280-4e33-a14c-90a6a6ca01b1",
     "version": 1,
     "metadata": {
-        "timestamp": "2026-02-12T16:43:00Z",
+        "timestamp": "2026-05-06T15:42:19Z",
         "tools": [
             {
                 "vendor": "Black Duck",
                 "name": "Hub",
-                "version": "2025.10.0"
+                "version": "2026.1.1"
             },
             {
                 "vendor": "CycloneDX",
@@ -24,12 +24,12 @@
         ],
         "component": {
             "type": "application",
-            "bom-ref": "a8b67bee-497b-4dc0-8521-3e0fa9fe3321",
+            "bom-ref": "08e307e5-0936-4073-a53a-2bdde91d186a",
             "supplier": {
                 "name": ""
             },
             "name": "EEPROM_Emulation",
-            "version": "2.0.0",
+            "version": "2.1.0",
             "licenses": [
                 {
                     "license": {
@@ -47,7 +47,7 @@
                 },
                 {
                     "name": "BlackDuck-ComponentVersion",
-                    "value": "a8b67bee-497b-4dc0-8521-3e0fa9fe3321"
+                    "value": "08e307e5-0936-4073-a53a-2bdde91d186a"
                 }
             ]
         }
@@ -55,12 +55,12 @@
     "components": [
         {
             "type": "library",
-            "bom-ref": "4d5514eb-0444-4284-8597-020b1716e9cd",
+            "bom-ref": "08e307e5-0936-4073-a53a-2bdde91d186a---5bb25619-46dd-4319-8262-ef86a9a5dd23",
             "supplier": {
                 "name": ""
             },
             "name": "EEPROM_Emulation",
-            "version": "2.0.0",
+            "version": "2.1.0",
             "licenses": [
                 {
                     "license": {
@@ -78,16 +78,16 @@
                 },
                 {
                     "name": "BlackDuck-ComponentVersion",
-                    "value": "4d5514eb-0444-4284-8597-020b1716e9cd"
+                    "value": "5bb25619-46dd-4319-8262-ef86a9a5dd23"
                 }
             ]
         }
     ],
     "dependencies": [
         {
-            "ref": "a8b67bee-497b-4dc0-8521-3e0fa9fe3321",
+            "ref": "08e307e5-0936-4073-a53a-2bdde91d186a",
             "dependsOn": [
-                "4d5514eb-0444-4284-8597-020b1716e9cd"
+                "08e307e5-0936-4073-a53a-2bdde91d186a---5bb25619-46dd-4319-8262-ef86a9a5dd23"
             ]
         }
     ]

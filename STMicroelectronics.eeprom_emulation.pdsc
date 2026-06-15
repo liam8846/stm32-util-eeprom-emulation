@@ -6,6 +6,38 @@
     <environment name="STM32Cube">
       <stm32:pack type="UTILITY" friendlyName="eeprom_emulation" shortDesc="EEPROM_Emulation utility">
         <relocation-info parent="utilities" layer="" element=""/>
+        <compatibility>
+          <release version="2.1.0">
+            <applicable-schema schemaType="sw-configuration" schemaVersion="3.9.0"/>
+            <applicable-api-group apiType="codegen-getters">
+              <applicable-api apiType="clockAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="DmaAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="EnvVarAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="ExtiAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="hwPlatformAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="NvicAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="peripheralsResourceManagerAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="pinoutAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="SWConfigurationAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="SWProjectAPI" apiVersion="1.0.0"/>
+            </applicable-api-group>
+          </release>
+          <release version="2.0.0">
+            <applicable-schema schemaType="sw-configuration" schemaVersion="3.8.0"/>
+            <applicable-api-group apiType="codegen-getters">
+              <applicable-api apiType="clockAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="DmaAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="EnvVarAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="ExtiAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="hwPlatformAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="NvicAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="peripheralsResourceManagerAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="pinoutAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="SWConfigurationAPI" apiVersion="1.0.0"/>
+              <applicable-api apiType="SWProjectAPI" apiVersion="1.0.0"/>
+            </applicable-api-group>
+          </release>
+        </compatibility>
       </stm32:pack>
     </environment>
   </environments>
@@ -22,6 +54,9 @@
     <changelog id="Release Notes" name="Release_Notes.html"/>
   </changelogs>
   <releases>
+    <release version="2.1.0" date="2026-06-12">
+      Refer to Release_Notes.html for release details.
+    </release>
     <release version="2.0.0" date="2026-03-13">
       Refer to Release_Notes.html for release details.
     </release>
@@ -87,7 +122,32 @@
       <accept condition="FLASH FLITF"/>
       <accept condition="FLASH NVM"/>
     </condition>
+    <condition id="EEPROM_Emulation Config">
+      <description>STMicroelectronics Utility EEPROM_Emulation Config</description>
+    </condition>
   </conditions>
+  <!-- This generator is launched if any component referencing this generator by 'id' is selected and the specified <gpdsc> file does not exist -->
+  <generators>
+    <!-- This generator is launched if any component referencing this generator by 'id' is selected and the specified <gpdsc> file does not exist -->
+    <generator id="eeprom_emulation_mx2codegen">
+      <description>ST Microelectronics: STM32 Cube Code Generator for utility EEPROM Emulation Pack</description>
+      <exe>
+        <command host="win">.config/gen_code.bat</command>
+        <command host="linux">.config/gen_code.sh</command>
+        <command host="mac">.config/gen_code.sh</command>
+        <!-- passing the generator name-->
+        <argument>eeprom_emulation_mx2codegen</argument>
+        <argument>$G</argument>
+        <!-- #name of the gpdsc template contained in this PACK and aligned with GPDSC name-->
+        <argument>STMicroelectronics.eeprom_emulation.gpdsc.hbs</argument>
+        <!-- Flag to indicate that this Generator is dry-run capable -->
+        <argument mode="dry-run">--dry-run</argument>
+      </exe>
+      <!-- <workingDir>$P</workingDir> -->
+      <!-- path is specified either absolute or relative to PDSC or GPDSC file. If not specified it is the project directory configured by the environment  -->
+      <gpdsc name="$P/STMicroelectronics.eeprom_emulation.gpdsc"/>
+    </generator>
+  </generators>
   <components>
     <component Cclass="Utility" Cgroup="eeprom emulation" Csub="algo" Cvariant="FLITF" Cversion="1.0.0">
       <description>EEPROM_Emulation flitf algorithm</description>
@@ -159,6 +219,29 @@
         <file category="header" name="core/eeprom_emul_core.h"/>
         <file category="source" name="core/eeprom_emul_core.c"/>
         <file category="doc" name="SW_Security_Level.md"/>
+      </files>
+    </component>
+    <component generator="eeprom_emulation_mx2codegen" Cclass="Utility" Cgroup="STM32CubeMX2 Config" Csub="EEPROM_Emulation" Cversion="1.0.0" condition="EEPROM_Emulation Config">
+      <description> Code Generation for EEPROM_Emulation utility </description>
+      <environments>
+        <environment name="STM32Cube">
+          <stm32:component>
+            <utility-entry-point id="EEPROM_Emulation" name="EEPROM_Emulation" category="Storage Utility"/>
+          </stm32:component>
+        </environment>
+      </environments>
+      <files>
+        <file category="genAsset" name=".config/gen_code.bat"/>
+        <file category="genAsset" name=".config/gen_code.sh"/>
+        <file category="genAsset" name=".config/eeprom_emulation_config_parameters.json"/>
+        <file category="genAsset" name=".config/STMicroelectronics.eeprom_emulation.gpdsc.hbs"/>
+        <file category="genAsset" name=".config/template/eeprom_emul_conf_template.h.hbs"/>
+        <file category="genAsset" name=".config/template/mx_eeprom_emulation_app_template.c.hbs"/>
+        <file category="genAsset" name=".config/template/mx_eeprom_emulation_app_template.h.hbs"/>
+        <file category="genAsset" name=".config/template/helpers/eeprom_emulation_helpers.js"/>
+        <!-- License files -->
+        <file category="genAsset" name=".config/template/partials/LICENSE_partial.hbs"/>
+        <file category="genAsset" name=".config/template/license/mx_eeprom_emulation_license_template.md.hbs"/>
       </files>
     </component>
   </components>

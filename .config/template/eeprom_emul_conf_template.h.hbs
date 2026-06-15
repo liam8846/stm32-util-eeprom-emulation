@@ -1,0 +1,104 @@
+{{!--
+  ******************************************************************************
+  * @file           : eeprom_emul_conf_template.h.hbs
+  * @brief          : EEPROM Emulation utility configuration header template
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2026 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  ~--}}
+{{assign 'eeprom_emulationFilter' (JSONparse '{"cgroup": "STM32CubeMX2 Config", "csub": "EEPROM_Emulation"}')~}}
+{{assign 'eeprom_emulation_context' (@root.SWConfigurationAPI.getInstancesConfiguration @root.eeprom_emulationFilter)~}}
+{{assign 'eeprom_emulation_cxt' @root.eeprom_emulation_context.[0].settings.parameters~}}
+{{log "eeprom_emulation Config template eeprom_emulation_cxt:" (toJSON @root.eeprom_emulation_cxt)~}}
+/**
+  **********************************************************************************************************************
+  * @file    eeprom_emul_conf.h
+  * @brief   EEPROM Emulation configuration file
+{{> LICENSE}}
+
+{{#with @root.eeprom_emulation_cxt~}}
+{{#with basic~}}
+
+/* Define to prevent recursive inclusion -----------------------------------------------------------------------------*/
+#ifndef EEPROM_EMUL_CONF_H
+#define EEPROM_EMUL_CONF_H
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Private constants ---------------------------------------------------------*/
+
+/*!<  Algorithm selection: EEPROM emulation supports two algorithms, one for the FLITF flash interface and
+  one for the NVM flash interface. Select the required algorithm by enabling either EE_ALGO_FLITF or
+  EE_ALGO_NVM. */
+{{#if (eq flash_type "NVM")}}
+#define EE_ALGO_NVM                   (1)
+
+/*!<  Number of bytes per EEPROM data sector. This value depends on the flash type embedded in the
+  STM32 product. */
+#define EE_SECTOR_SIZE                ({{helper_eeprom_get_sector_size (@root.peripheralsResourceManagerAPI.getHardwareIpDescription "NVM")}}U)
+{{else}}
+  {{#if (eq flash_type "FLITF")}}
+#define EE_ALGO_FLITF                 (1)
+
+/*!<  Number of bytes per EEPROM data line. This value depends on the flash type embedded in the STM32
+      product and can be either 8 or 16. */
+#define EE_FRAME_LINE_SIZE            ({{helper_eeprom_get_frame_line_size (@root.peripheralsResourceManagerAPI.getHardwareIpDescription "FLASH")}})
+  {{/if}}
+{{/if}}
+
+
+/*!<  EEPROM emulation start address */
+#define EE_START_PAGE_ADDRESS         ({{eeprom_emulation_start_address}})
+
+{{#if (eq flash_type "FLITF")}}
+
+/*!< Start address of the flash */
+#define EE_FLASH_BASE_ADDRESS         (FLASH_EDATA_BASE)
+
+/*!< Flash page size */
+#define EE_FLASH_PAGE_SIZE            (FLASH_EDATA_PAGE_SIZE)
+
+{{/if}}
+
+{{#if (eq flash_type "NVM")}}
+/*!<  Number of 8-bit variables stored in EEPROM emulation */
+#define EE_NB_OF_8BITS_VARIABLES      ({{variables_number_8bit}})
+
+/*!<  Number of 16-bit and 32-bit variables stored in EEPROM emulation */
+#define EE_NB_OF_16_32BITS_VARIABLES  ({{helper_eeprom_get_16_32bit_variables_total this}})
+
+/*!<  Total number of variables stored in EEPROM emulation */
+#define EE_NB_OF_VARIABLES            (EE_NB_OF_8BITS_VARIABLES + EE_NB_OF_16_32BITS_VARIABLES)
+{{else}}
+  {{#if (eq flash_type "FLITF")}}
+/*!<  Total number of variables stored in EEPROM emulation */
+#define EE_NB_OF_VARIABLES            ({{total_variables_number}})
+
+/*!<  Number of guard pages used to reduce frequent transfers */
+#define EE_GUARD_PAGES_NUMBER         ({{guard_pages_number}}U)
+  {{/if}}
+{{/if}}
+
+/*!<  Requested number of EEPROM emulation cycles. The minimum value is 1 for 10 Kcycles by default.
+      Higher values increase the number of required pages. */
+{{#if (eq flash_type "FLITF")}}
+#define EE_CYCLES_NUMBER              ({{cycles_numbers_flitf}})
+{{else}}
+#define EE_CYCLES_NUMBER              ({{cycles_numbers_nvm}})
+{{/if}}
+
+#ifdef __cplusplus
+}
+#endif
+{{/with~}}{{!basic}}
+{{/with}}{{!eeprom_emulation_cxt}}
+#endif /*EEPROM_EMUL_CONF_H */

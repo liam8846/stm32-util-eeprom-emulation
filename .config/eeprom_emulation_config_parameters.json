@@ -1,0 +1,873 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "version": "0.0.1",
+    "componentid": "::Utility:STM32CubeMX2 Config:EEPROM_Emulation",
+    "type": "object",
+    "grammarVersion": "3.9.0",
+    "license": "Copyright (c) 2026 STMicroelectronics",
+    "functions": [
+        {
+            "path": ".config/template/helpers/eeprom_emulation_helpers.js",
+            "accessor": "ee_cfg"
+        }
+    ],
+    "properties": {
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "info": {
+                    "title": "General information",
+                    "description": "Overview and requirements for the EEPROM Emulation utility.",
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "title": "Description",
+                            "description": "General description of the EEPROM Emulation utility.",
+                            "type": "string",
+                            "actions": [
+                                {
+                                    "type": "disable",
+                                    "condition": "true",
+                                    "message": "This entry is displayed for information only and cannot be edited."
+                                }
+                            ],
+                            "default": "EEPROM Emulation provides an abstraction layer that emulates EEPROM on STM32 FLASH memory. It enables the application to store and retrieve data persistently without dedicated EEPROM hardware."
+                        },
+                        "recommendation": {
+                            "title": "Mandatory requirements",
+                            "type": "string",
+                            "actions": [
+                                {
+                                    "type": "disable",
+                                    "condition": "true",
+                                    "message": "This entry is displayed for information only and cannot be edited."
+                                }
+                            ],
+                            "default": "In Valid start addresses, identify a listed page start address and enter it in Start address. Ensure the number of variables and cycles does not exceed the available FLASH area size.",
+                            "description": "The following requirements must be met before initializing EEPROM Emulation. These steps are mandatory to ensure proper operation."
+                        }
+                    }
+                },
+                "basic": {
+                    "title": "Main features",
+                    "type": "object",
+                    "actions": [
+                        {
+                            "type": "error",
+                            "condition": "($basic.flash_type == 'NVM' || $basic.flash_type == 'FLITF') && !$ee_cfg.helper_eeprom_has_selected_flash_area($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)",
+                            "message": "No valid FLASH area is available for EEPROM Emulation on this device."
+                        },
+                        {
+                            "type": "error",
+                            "condition": "$basic.flash_type == 'FLITF' && ($basic.guard_pages_number == undefined)",
+                            "message": "Enter a Number of guard pages greater than or equal to 0."
+                        }
+                    ],
+                    "properties": {
+                        "flash_type": {
+                            "title": "Selected algorithm for",
+                            "description": "Algorithm used by EEPROM Emulation. This value is automatically derived from the STM32 device capabilities.",
+                            "type": "string",
+                            "default": "",
+                            "actions": [
+                                {
+                                    "type": "disable",
+                                    "condition": "true",
+                                    "message": "This entry is displayed for information only and cannot be edited."
+                                },
+                                {
+                                    "type": "set",
+                                    "attributes": {
+                                        "const": "NVM"
+                                    },
+                                    "condition": "$get('peripheral.isPhysicallyAvailableInCurrentDevice', 'NVM')",
+                                    "message": "Selected algorithm is set to NVM when the device provides an NVM peripheral."
+                                },
+                                {
+                                    "type": "set",
+                                    "attributes": {
+                                        "const": "FLITF"
+                                    },
+                                    "condition": "$get('peripheral.isPhysicallyAvailableInCurrentDevice', 'FLASH') && !$get('peripheral.isPhysicallyAvailableInCurrentDevice', 'NVM')",
+                                    "message": "Selected algorithm is set to FLITF when FLASH is available and NVM is not present on the device."
+                                }
+                            ]
+                        },
+                        "erase_type_on_init": {
+                            "title": "Erase type on initialization",
+                            "type": "string",
+                            "description": "Select the erase policy applied during initialization.",
+                            "default": "EE_CONDITIONAL_ERASE",
+                            "actions": [
+                                {
+                                    "type": "include",
+                                    "condition": "$basic.flash_type == 'FLITF'",
+                                    "message": "Erase type on init is displayed when the selected algorithm is FLITF."
+                                }
+                            ],
+                            "oneOf": [
+                                {
+                                    "title": "Conditional erase",
+                                    "const": "EE_CONDITIONAL_ERASE"
+                                },
+                                {
+                                    "title": "Forced erase",
+                                    "const": "EE_FORCED_ERASE"
+                                }
+                            ]
+                        },
+                        "flash_area": {
+                            "title": "FLASH area",
+                            "type": "string",
+                            "description": "Select the FLASH memory area used to store EEPROM Emulation data.",
+                            "oneOf": [
+                                {
+                                    "title": "EDATA",
+                                    "const": "EDATA",
+                                    "actions": [
+                                        {
+                                            "type": "include",
+                                            "condition": "$ee_cfg.helper_eeprom_has_selected_flash_area($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)",
+                                            "message": "The EDATA option is displayed when EDATA is available for the selected FLASH type."
+                                        }
+                                    ]
+                                }
+                            ],
+                            "actions": [
+                                {
+                                    "type": "exclude",
+                                    "condition": "true",
+                                    "message": "FLASH area is kept internal and hidden from the interface."
+                                },
+                                {
+                                    "type": "set",
+                                    "condition": "$ee_cfg.helper_eeprom_has_selected_flash_area($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "FLASH area defaults to EDATA when EDATA is available for the selected FLASH type.",
+                                    "computed": {
+                                        "default": "EDATA"
+                                    }
+                                }
+                            ]
+                        },
+                        "flash_area_start_address": {
+                            "title": "FLASH area start address",
+                            "type": "string",
+                            "readOnly": true,
+                            "description": "Start address of the first available page in the selected FLASH area.",
+                            "actions": [
+                                {
+                                    "type": "exclude",
+                                    "condition": "true",
+                                    "message": "FLASH area start address is kept internal and hidden from the interface."
+                                },
+                                {
+                                    "type": "disable",
+                                    "condition": "true",
+                                    "message": "This entry is displayed for information only and cannot be edited."
+                                },
+                                {
+                                    "type": "set",
+                                    "condition": "$ee_cfg.helper_eeprom_has_selected_flash_area($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "FLASH area start address is populated with the first available start address for the selected FLASH area.",
+                                    "computed": {
+                                        "const": "$ee_cfg.helper_eeprom_get_selected_flash_area_start_address($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)"
+                                    }
+                                }
+                            ]
+                        },
+                        "valid_eeprom_emulation_start_addresses": {
+                            "title": "Valid start addresses",
+                            "type": "array",
+                            "rendering": "horizontal-list",
+                            "description": "Review this list and enter one listed page start address in Start address.",
+                            "source": "$ee_cfg.helper_eeprom_get_selected_flash_area_valid_start_addresses($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)",
+                            "itemId": "address",
+                            "itemVar": "start_address",
+                            "itemTitle": "address",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "address_value": {
+                                        "title": "Address value",
+                                        "type": "string",
+                                        "actions": [
+                                            {
+                                                "type": "disable",
+                                                "condition": "true",
+                                                "message": "This entry is displayed for information only and cannot be edited."
+                                            },
+                                            {
+                                                "type": "set",
+                                                "condition": "true",
+                                                "computed": {
+                                                    "const": "$start_address.address"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "actions": [
+                                {
+                                    "type": "include",
+                                    "condition": "$ee_cfg.helper_eeprom_get_selected_flash_area_valid_start_addresses($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure).length > 0",
+                                    "message": "Valid start addresses are displayed when valid page start addresses are available for the selected FLASH area."
+                                }
+                            ]
+                        },
+                        "eeprom_emulation_start_address": {
+                            "title": "Start address",
+                            "type": "string",
+                            "description": "Enter one address from Valid start addresses within the selected FLASH area range.",
+                            "actions": [
+                                {
+                                    "type": "include",
+                                    "condition": "$ee_cfg.helper_eeprom_get_selected_flash_area_start_address($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure) != ''",
+                                    "message": "Start address is displayed when the selected FLASH area provides a valid start address."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$value == ''",
+                                    "message": "Enter one of the listed valid page start addresses within the selected FLASH area."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$value != undefined && $value != '' && !/^0x[0-9a-fA-F]+$/.test(String($value))",
+                                    "message": "Enter a hexadecimal address in the format 0xXXXXXXXX, using one of the addresses listed above."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$value != undefined && $value != '' && /^0x[0-9a-fA-F]+$/.test(String($value)) && !$ee_cfg.helper_eeprom_is_selected_flash_area_page_start($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $value, $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "Enter one of the listed valid page start addresses."
+                                },
+                                {
+                                    "type": "set",
+                                    "condition": "$ee_cfg.helper_eeprom_get_selected_flash_area_start_address($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure) != ''",
+                                    "message": "Start address defaults to the first valid page start address in the selected FLASH area until another valid address is entered.",
+                                    "computed": {
+                                        "default": "$ee_cfg.helper_eeprom_get_selected_flash_area_start_address($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)"
+                                    }
+                                }
+                            ]
+                        },
+                        "eeprom_emulation_end_address": {
+                            "title": "End address",
+                            "type": "string",
+                            "readOnly": true,
+                            "description": "Computed end address for EEPROM Emulation based on the configured variables and cycles.",
+                            "actions": [
+                                {
+                                    "type": "include",
+                                    "condition": "$ee_cfg.helper_eeprom_get_selected_flash_area_start_address($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure) != ''",
+                                    "message": "EEPROM Emulation end address is displayed when the selected FLASH area provides a valid start address."
+                                },
+                                {
+                                    "type": "disable",
+                                    "condition": "true",
+                                    "message": "This entry is displayed for information only and cannot be edited."
+                                },
+                                {
+                                    "type": "set",
+                                    "condition": "$ee_cfg.helper_eeprom_get_selected_flash_area_start_address($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure) != ''",
+                                    "message": "EEPROM Emulation end address is computed from the selected EEPROM Emulation parameters.",
+                                    "computed": {
+                                        "const": "$ee_cfg.helper_eeprom_get_selected_end_address($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)"
+                                    }
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$ee_cfg.helper_eeprom_has_selected_start_address_error($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $basic.eeprom_emulation_start_address, $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "Correct the Start address first. End address currently shows the final address in the selected FLASH area."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$ee_cfg.helper_eeprom_selected_exceeds_available_pages($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), '', '', $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "End address exceeds the available FLASH area range. This is the final address in the selected FLASH area. Adjust the configuration to fit within the available FLASH area size."
+                                }
+                            ]
+                        },
+                        "variables_number_8bit": {
+                            "title": "Number of 8-bit variables",
+                            "type": "integer",
+                            "default": 100,
+                            "minimum": 0,
+                            "display_format": [
+                                "dec"
+                            ],
+                            "description": "Set the number of 8-bit variables to write in EEPROM Emulation.",
+                            "actions": [
+                                {
+                                    "type": "include",
+                                    "condition": "$basic.flash_type == 'NVM'",
+                                    "message": "Number of 8-bit variables is displayed when FLASH type is NVM."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$basic.flash_type == 'NVM' && !$ee_cfg.helper_eeprom_has_selected_flash_area($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "No valid FLASH area is available for EEPROM Emulation on this device."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$basic.flash_type == 'NVM' && $ee_cfg.helper_eeprom_has_selected_start_address_error($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $basic.eeprom_emulation_start_address, $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "Correct the Start address first. It must be one of the listed valid page start addresses within the selected FLASH area."
+                                },
+                                {
+                                    "type": "set",
+                                    "condition": "$basic.flash_type == 'NVM'",
+                                    "computed": {
+                                        "description": "$ee_cfg.helper_eeprom_get_selected_nvm_8bit_variables_description($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)"
+                                    }
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$ee_cfg.helper_eeprom_selected_exceeds_available_pages($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), 'variables_number_8bit', $value, $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "This configuration exceeds the available FLASH area size."
+                                }
+                            ]
+                        },
+                        "variables_number_16bit": {
+                            "title": "Number of 16-bit variables",
+                            "type": "integer",
+                            "default": 100,
+                            "minimum": 0,
+                            "display_format": [
+                                "dec"
+                            ],
+                            "description": "Set the number of 16-bit variables to write in EEPROM Emulation.",
+                            "actions": [
+                                {
+                                    "type": "include",
+                                    "condition": "$basic.flash_type == 'NVM'",
+                                    "message": "Number of 16-bit variables is displayed when FLASH type is NVM."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$basic.flash_type == 'NVM' && !$ee_cfg.helper_eeprom_has_selected_flash_area($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "No valid FLASH area is available for EEPROM Emulation on this device."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$basic.flash_type == 'NVM' && $ee_cfg.helper_eeprom_has_selected_start_address_error($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $basic.eeprom_emulation_start_address, $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "Correct the Start address first. It must be one of the listed valid page start addresses within the selected FLASH area."
+                                },
+                                {
+                                    "type": "set",
+                                    "condition": "$basic.flash_type == 'NVM'",
+                                    "computed": {
+                                        "description": "$ee_cfg.helper_eeprom_get_selected_nvm_16bit_variables_description($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)"
+                                    }
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$ee_cfg.helper_eeprom_selected_exceeds_available_pages($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), 'variables_number_16bit', $value, $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "This configuration exceeds the available FLASH area size."
+                                }
+                            ]
+                        },
+                        "variables_number_32bit": {
+                            "title": "Number of 32-bit variables",
+                            "type": "integer",
+                            "default": 100,
+                            "minimum": 0,
+                            "display_format": [
+                                "dec"
+                            ],
+                            "description": "Set the number of 32-bit variables to write in EEPROM Emulation.",
+                            "actions": [
+                                {
+                                    "type": "include",
+                                    "condition": "$basic.flash_type == 'NVM'",
+                                    "message": "Number of 32-bit variables is displayed when FLASH type is NVM."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$basic.flash_type == 'NVM' && !$ee_cfg.helper_eeprom_has_selected_flash_area($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "No valid FLASH area is available for EEPROM Emulation on this device."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$basic.flash_type == 'NVM' && $ee_cfg.helper_eeprom_has_selected_start_address_error($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $basic.eeprom_emulation_start_address, $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "Correct the Start address first. It must be one of the listed valid page start addresses within the selected FLASH area."
+                                },
+                                {
+                                    "type": "set",
+                                    "condition": "$basic.flash_type == 'NVM'",
+                                    "computed": {
+                                        "description": "$ee_cfg.helper_eeprom_get_selected_nvm_32bit_variables_description($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)"
+                                    }
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$ee_cfg.helper_eeprom_selected_exceeds_available_pages($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), 'variables_number_32bit', $value, $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "This configuration exceeds the available FLASH area size."
+                                }
+                            ]
+                        },
+                        "total_variables_number": {
+                            "title": "Total variables number",
+                            "type": "integer",
+                            "default": 100,
+                            "minimum": 1,
+                            "display_format": [
+                                "dec"
+                            ],
+                            "description": "Set the total number of variables to write in EEPROM Emulation.",
+                            "actions": [
+                                {
+                                    "type": "include",
+                                    "condition": "$basic.flash_type == 'FLITF'",
+                                    "message": "Total variables number is displayed when FLASH type is FLITF."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$basic.flash_type == 'FLITF' && !$ee_cfg.helper_eeprom_has_selected_flash_area($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "No valid FLASH area is available for EEPROM Emulation on this device."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$basic.flash_type == 'FLITF' && $ee_cfg.helper_eeprom_has_selected_start_address_error($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $basic.eeprom_emulation_start_address, $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "Correct the Start address first. It must be one of the listed valid page start addresses within the selected FLASH area."
+                                },
+                                {
+                                    "type": "set",
+                                    "condition": "$basic.flash_type == 'FLITF'",
+                                    "computed": {
+                                        "description": "$ee_cfg.helper_eeprom_get_selected_flitf_total_variables_description($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)"
+                                    }
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$ee_cfg.helper_eeprom_selected_exceeds_available_pages($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), 'total_variables_number', $value, $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "This configuration exceeds the available FLASH area size."
+                                }
+                            ]
+                        },
+                        "cycles_numbers_nvm": {
+                            "title": "Number of cycles",
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1,
+                            "maximum": 15,
+                            "display_format": [
+                                "dec"
+                            ],
+                            "description": "Set the number of write cycles for the NVM algorithm. Allowed range is 1 to 15.",
+                            "actions": [
+                                {
+                                    "type": "include",
+                                    "condition": "$basic.flash_type == 'NVM'",
+                                    "message": "Number of cycles is displayed when FLASH type is NVM."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$basic.flash_type == 'NVM' && !$ee_cfg.helper_eeprom_has_selected_flash_area($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "No valid FLASH area is available for EEPROM Emulation on this device."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$basic.flash_type == 'NVM' && $ee_cfg.helper_eeprom_has_selected_start_address_error($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $basic.eeprom_emulation_start_address, $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "Correct the Start address first. It must be one of the listed valid page start addresses within the selected FLASH area."
+                                },
+                                {
+                                    "type": "set",
+                                    "condition": "true",
+                                    "computed": {
+                                        "title": "$ee_cfg.helper_eeprom_get_selected_cycles_title($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)"
+                                    }
+                                },
+                                {
+                                    "type": "set",
+                                    "condition": "$basic.flash_type == 'NVM'",
+                                    "computed": {
+                                        "maximum": "$ee_cfg.helper_eeprom_get_selected_nvm_maximum_cycles($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)"
+                                    }
+                                },
+                                {
+                                    "type": "set",
+                                    "condition": "true",
+                                    "computed": {
+                                        "description": "$ee_cfg.helper_eeprom_get_selected_cycles_description($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)"
+                                    }
+                                },
+                                {
+                                    "type": "warning",
+                                    "condition": "$value != undefined && (!Number.isInteger($value) || !/^[0-9]+$/.test(String($value)) || $value < 1)",
+                                    "message": "Enter a positive decimal integer greater than or equal to 1."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$ee_cfg.helper_eeprom_selected_exceeds_available_pages($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), 'cycles_numbers_nvm', $value, $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "This configuration exceeds the available FLASH area size."
+                                }
+                            ]
+                        },
+                        "cycles_numbers_flitf": {
+                            "title": "Number of cycles",
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1,
+                            "display_format": [
+                                "dec"
+                            ],
+                            "description": "Set the number of write cycles for the FLITF algorithm.",
+                            "actions": [
+                                {
+                                    "type": "include",
+                                    "condition": "$basic.flash_type == 'FLITF'",
+                                    "message": "Number of cycles is displayed when FLASH type is FLITF."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$basic.flash_type == 'FLITF' && !$ee_cfg.helper_eeprom_has_selected_flash_area($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "No valid FLASH area is available for EEPROM Emulation on this device."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$basic.flash_type == 'FLITF' && $ee_cfg.helper_eeprom_has_selected_start_address_error($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $basic.eeprom_emulation_start_address, $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "Correct the Start address first. It must be one of the listed valid page start addresses within the selected FLASH area."
+                                },
+                                {
+                                    "type": "set",
+                                    "condition": "true",
+                                    "computed": {
+                                        "title": "$ee_cfg.helper_eeprom_get_selected_cycles_title($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)"
+                                    }
+                                },
+                                {
+                                    "type": "set",
+                                    "condition": "$basic.flash_type == 'FLITF'",
+                                    "computed": {
+                                        "maximum": "$ee_cfg.helper_eeprom_get_selected_flitf_maximum_cycles($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)"
+                                    }
+                                },
+                                {
+                                    "type": "set",
+                                    "condition": "true",
+                                    "computed": {
+                                        "description": "$ee_cfg.helper_eeprom_get_selected_flitf_cycles_description($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)"
+                                    }
+                                },
+                                {
+                                    "type": "warning",
+                                    "condition": "$value != undefined && (!Number.isInteger($value) || !/^[0-9]+$/.test(String($value)) || $value < 1)",
+                                    "message": "Enter a positive decimal integer greater than or equal to 1."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$ee_cfg.helper_eeprom_selected_exceeds_available_pages($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), 'cycles_numbers_flitf', $value, $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "This configuration exceeds the available FLASH area size."
+                                }
+                            ]
+                        },
+                        "guard_pages_number": {
+                            "title": "Number of guard pages",
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 0,
+                            "display_format": [
+                                "dec"
+                            ],
+                            "description": "Set the number of guard pages to reduce transfer frequency.",
+                            "actions": [
+                                {
+                                    "type": "include",
+                                    "condition": "$basic.flash_type == 'FLITF'",
+                                    "message": "Number of guard pages is displayed when FLASH type is FLITF."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$basic.flash_type == 'FLITF' && !$ee_cfg.helper_eeprom_has_selected_flash_area($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "No valid FLASH area is available for EEPROM Emulation on this device."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$basic.flash_type == 'FLITF' && $ee_cfg.helper_eeprom_has_selected_start_address_error($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $basic.eeprom_emulation_start_address, $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "Correct the Start address first. It must be one of the listed valid page start addresses within the selected FLASH area."
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$basic.flash_type == 'FLITF' && ($value == undefined || !Number.isInteger($value) || !/^[0-9]+$/.test(String($value)) || $value < 0)",
+                                    "message": "Enter a decimal integer greater than or equal to 0."
+                                },
+                                {
+                                    "type": "set",
+                                    "condition": "$basic.flash_type == 'FLITF'",
+                                    "computed": {
+                                        "description": "$ee_cfg.helper_eeprom_get_selected_flitf_guard_pages_description($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)"
+                                    }
+                                },
+                                {
+                                    "type": "error",
+                                    "condition": "$ee_cfg.helper_eeprom_selected_exceeds_available_pages($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), 'guard_pages_number', $value, $get('swproject.getCurrentEngine')?.secure)",
+                                    "message": "This configuration exceeds the available FLASH area size."
+                                }
+                            ]
+                        },
+                        "required_pages_number": {
+                            "title": "Required number of pages",
+                            "type": "string",
+                            "readOnly": true,
+                            "description": "Displays the total number of pages required for the current EEPROM Emulation configuration. Shows Required pages cannot be calculated. Check the start address and EEPROM settings. when the value cannot be computed, and Exceeds the number of pages available when the configuration does not fit in the selected FLASH area.",
+                            "actions": [
+                                {
+                                    "type": "include",
+                                    "condition": "$ee_cfg.helper_eeprom_get_selected_flash_area_start_address($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure) != ''",
+                                    "message": "Required number of pages is displayed when the selected FLASH area provides a valid start address."
+                                },
+                                {
+                                    "type": "disable",
+                                    "condition": "true",
+                                    "message": "This entry is displayed for information only and cannot be edited."
+                                },
+                                {
+                                    "type": "set",
+                                    "condition": "$ee_cfg.helper_eeprom_get_selected_flash_area_start_address($basic.flash_type, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure) != ''",
+                                    "message": "Required number of pages is computed from the selected EEPROM Emulation parameters.",
+                                    "computed": {
+                                        "const": "$ee_cfg.helper_eeprom_get_selected_required_pages($basic, $get('peripheral.hardwareIpDescription', 'NVM'), $get('peripheral.hardwareIpDescription', 'FLASH'), $get('swproject.getCurrentEngine')?.secure)"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "resourcesAllocation": {
+                    "title": "Resources allocation",
+                    "type": "object",
+                    "properties": {
+                        "flash": {
+                            "title": "FLASH",
+                            "type": "object",
+                            "properties": {
+                                "interface": {
+                                    "title": "Interface",
+                                    "type": "string",
+                                    "description": "Select the FLASH interface used by EEPROM Emulation.",
+                                    "actions": [
+                                        {
+                                            "type": "include",
+                                            "condition": "$basic.flash_type == 'NVM' || $basic.flash_type == 'FLITF'",
+                                            "message": "FLASH interface is displayed when EEPROM Emulation uses an NVM or FLITF FLASH type."
+                                        },
+                                        {
+                                            "type": "set",
+                                            "condition": "$basic.flash_type == 'FLITF'",
+                                            "message": "FLASH interface defaults to EDATA when FLASH type is FLITF.",
+                                            "computed": {
+                                                "default": "FLITF_EDATA"
+                                            }
+                                        },
+                                        {
+                                            "type": "set",
+                                            "condition": "$basic.flash_type == 'NVM'",
+                                            "message": "FLASH interface defaults to EDATA when FLASH type is NVM.",
+                                            "computed": {
+                                                "default": "NVM_EDATA"
+                                            }
+                                        }
+                                    ],
+                                    "oneOf": [
+                                        {
+                                            "title": "EDATA",
+                                            "const": "FLITF_EDATA",
+                                            "actions": [
+                                                {
+                                                    "type": "include",
+                                                    "condition": "$basic.flash_type == 'FLITF'",
+                                                    "message": "The EDATA FLASH interface is available when FLASH type is FLITF."
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "title": "EDATA",
+                                            "const": "NVM_EDATA",
+                                            "actions": [
+                                                {
+                                                    "type": "include",
+                                                    "condition": "$basic.flash_type == 'NVM'",
+                                                    "message": "The EDATA FLASH interface is available when FLASH type is NVM."
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "title": "Custom",
+                                            "const": "CUSTOM",
+                                            "description": "Custom FLASH interface implemented by the user."
+                                        }
+                                    ]
+                                },
+                                "flash_instance": {
+                                    "title": "Instance",
+                                    "type": "object",
+                                        "description": "Configure the FLASH peripheral first in the HAL FLASH configuration panel. Then enable Use register callback, Use HAL FLASH erase by address, Use HAL FLASH ECC, Use HAL FLASH OB EDATA, and Use HAL FLASH program by address in the CORE panel.",
+                                    "objectType": "bind.peripheral.config",
+                                    "criteria": {
+                                        "peripheralType": [
+                                            "flash"
+                                        ]
+                                    },
+                                    "actions": [
+                                        {
+                                            "type": "include",
+                                            "condition": "$resourcesAllocation.flash.interface == 'FLITF_EDATA'",
+                                            "message": "FLASH instance is displayed when the selected FLASH interface is EDATA."
+                                        },
+                                        {
+                                            "type": "warning",
+                                            "condition": "$resourcesAllocation.flash.interface == 'FLITF_EDATA' && !$resourcesAllocation.flash.flash_instance?.selection",
+                                            "message": "Select a FLASH instance."
+                                        },
+                                        {
+                                            "type": "error",
+                                            "condition": "$resourcesAllocation.flash.interface == 'FLITF_EDATA' && !$resourcesAllocation.flash.flash_instance?.selection",
+                                            "message": "Select a FLASH instance."
+                                        },
+                                        {
+                                            "type": "error",
+                                            "condition": "$resourcesAllocation.flash.interface == 'FLITF_EDATA' && $resourcesAllocation.flash.flash_instance?.selection && $get('sw-config.project-component-parameter-value', 'HALCore', 'flash_feature/use_register_callback') !== true",
+                                            "message": "Use register callback must be enabled in the CORE panel for HAL FLASH."
+                                        },
+                                        {
+                                            "type": "error",
+                                            "condition": "$resourcesAllocation.flash.interface == 'FLITF_EDATA' && $resourcesAllocation.flash.flash_instance?.selection && $get('sw-config.project-component-parameter-value', 'HALCore', 'flash_feature/use_hal_flash_erase_by_addr') !== true",
+                                            "message": "Use HAL FLASH erase by address must be enabled in the CORE panel for HAL FLASH."
+                                        },
+                                        {
+                                            "type": "error",
+                                            "condition": "$resourcesAllocation.flash.interface == 'FLITF_EDATA' && $resourcesAllocation.flash.flash_instance?.selection && $get('sw-config.project-component-parameter-value', 'HALCore', 'flash_feature/use_hal_flash_ecc') !== true",
+                                            "message": "Use HAL FLASH ECC must be enabled in the CORE panel for HAL FLASH."
+                                        },
+                                        {
+                                            "type": "error",
+                                            "condition": "$resourcesAllocation.flash.interface == 'FLITF_EDATA' && $resourcesAllocation.flash.flash_instance?.selection && $get('sw-config.project-component-parameter-value', 'HALCore', 'flash_feature/use_hal_flash_ob_edata') !== true",
+                                            "message": "Use HAL FLASH OB EDATA must be enabled in the CORE panel for HAL FLASH."
+                                        },
+                                        {
+                                            "type": "error",
+                                            "condition": "$resourcesAllocation.flash.interface == 'FLITF_EDATA' && $resourcesAllocation.flash.flash_instance?.selection && $get('sw-config.project-component-parameter-value', 'HALCore', 'flash_feature/use_hal_flash_program_by_addr') !== true",
+                                            "message": "Use HAL FLASH program by address must be enabled in the CORE panel for HAL FLASH."
+                                        }
+                                    ]
+                                },
+                                "nvm_instance": {
+                                    "title": "Instance",
+                                    "type": "object",
+                                    "description": "Configure the NVM peripheral first in the HAL NVM configuration panel.",
+                                    "objectType": "bind.peripheral.config",
+                                    "criteria": {
+                                        "peripheralType": [
+                                            "nvm"
+                                        ]
+                                    },
+                                    "actions": [
+                                        {
+                                            "type": "include",
+                                            "condition": "$resourcesAllocation.flash.interface == 'NVM_EDATA'",
+                                            "message": "NVM instance is displayed when the selected FLASH interface is EDATA."
+                                        },
+                                        {
+                                            "type": "warning",
+                                            "condition": "$resourcesAllocation.flash.interface == 'NVM_EDATA' && !$resourcesAllocation.flash.nvm_instance?.selection",
+                                            "message": "Select an NVM instance."
+                                        },
+                                        {
+                                            "type": "error",
+                                            "condition": "$resourcesAllocation.flash.interface == 'NVM_EDATA' && !$resourcesAllocation.flash.nvm_instance?.selection",
+                                            "message": "Select an NVM instance."
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "crc": {
+                            "title": "CRC",
+                            "type": "object",
+                            "properties": {
+                                "interface": {
+                                    "title": "Interface",
+                                    "type": "string",
+                                    "description": "Select the CRC interface used by EEPROM Emulation.",
+                                    "oneOf": [
+                                        {
+                                            "title": "CRC",
+                                            "const": "CRC"
+                                        },
+                                        {
+                                            "title": "Custom",
+                                            "const": "CUSTOM"
+                                        }
+                                    ],
+                                    "default": "CRC"
+                                },
+                                "instance": {
+                                    "title": "Instance",
+                                    "type": "object",
+                                    "description": "Configure the CRC peripheral first in the HAL CRC configuration panel.",
+                                    "objectType": "bind.peripheral.config",
+                                    "criteria": {
+                                        "peripheralType": [
+                                            "crc"
+                                        ]
+                                    },
+                                    "actions": [
+                                        {
+                                            "type": "include",
+                                            "condition": "$resourcesAllocation.crc.interface == 'CRC'",
+                                            "message": "CRC instance is displayed when the selected CRC interface is CRC."
+                                        },
+                                        {
+                                            "type": "warning",
+                                            "condition": "$resourcesAllocation.crc.interface == 'CRC' && !$resourcesAllocation.crc.instance?.selection",
+                                            "message": "Select a CRC instance."
+                                        },
+                                        {
+                                            "type": "error",
+                                            "condition": "$resourcesAllocation.crc.interface == 'CRC' && !$resourcesAllocation.crc.instance?.selection",
+                                            "message": "Select a CRC instance."
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "ecc": {
+                            "title": "ECC",
+                            "type": "object",
+                            "actions": [
+                                {
+                                    "type": "exclude",
+                                    "condition": "$basic.flash_type != 'NVM'",
+                                    "message": "ECC is displayed only when FLASH type is NVM."
+                                }
+                            ],
+                            "properties": {
+                                "interface": {
+                                    "title": "Interface",
+                                    "type": "string",
+                                    "description": "Select the ECC interface used by EEPROM Emulation.",
+                                    "oneOf": [
+                                        {
+                                            "title": "BCH",
+                                            "const": "BCH"
+                                        },
+                                        {
+                                            "title": "Custom",
+                                            "const": "CUSTOM"
+                                        }
+                                    ],
+                                    "default": "BCH",
+                                    "actions": [
+                                        {
+                                            "type": "include",
+                                            "condition": "$basic.flash_type == 'NVM'",
+                                            "message": "ECC interface is displayed when FLASH type is NVM."
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

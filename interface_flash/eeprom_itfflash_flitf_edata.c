@@ -381,7 +381,7 @@ static void EE_ITF_ErrorCallback(hal_flash_handle_t *hflash, hal_flash_bank_t ba
     /* inform application that error occurs with an error */
     if (ee_itf_context.ope_callback != NULL)
     {
-      ee_itf_context.ope_callback(EE_ITF_FLASH_OPERATION_OK);
+      ee_itf_context.ope_callback(EE_ITF_FLASH_OPERATION_ERROR);
     }
   }
 }
